@@ -247,47 +247,53 @@
         const client = accountClient(token);
 
         async function loadPropAccounts() {
-            const cardsContainer = document.getElementById('prop-cards');
-            try {
-                const propAccounts = await client.getAllPropAccounts();
-                cardsContainer.innerHTML = '';
+        const cardsContainer = document.getElementById('prop-cards');
+        try {
+            const propAccounts = await client.getAllPropAccounts();
+            // Filter out demo accounts (only show live prop accounts)
+            const livePropAccounts = propAccounts.filter(acc => !acc.isDemo);
+            cardsContainer.innerHTML = '';
 
-                propAccounts.forEach(account => {
-                    const card = document.createElement('div');
-                    card.className = 'prop-card-wrapper border-radius-10';
-                    card.innerHTML = `
-                        <div class="prop-card-header">
-                            <div class="prop-price ff-bold">$${account.tradingBalance.toLocaleString()}</div>
-                            <div class="prop-title">${account.title}</div>
+            livePropAccounts.forEach(account => {
+                const card = document.createElement('div');
+                card.className = 'prop-card-wrapper border-radius-10';
+                card.innerHTML = `
+                    <div class="prop-card-header">
+                        <div class="prop-price ff-bold">$${account.tradingBalance.toLocaleString()}</div>
+                        <div class="prop-title">${account.title}</div>
+                    </div>
+                    <div class="prop-card-body">
+                        <ul class="prop-card-details">
+                            <li>Profit Target (Phase I): <span class="ff-bold">${account.profitTargetPhase1}%</span></li>
+                            <li>Profit Target (Phase II): <span class="ff-bold">${account.profitTargetPhase2}%</span></li>
+                            <li>Daily Loss Limit: <span class="ff-bold">${account.dailyLossLimit}%</span></li>
+                            <li>Max Trailing Drawdown: <span class="ff-bold">${account.maxTrailingDrawdown}%</span></li>
+                            <li>Minimum Trading Days: <span class="ff-bold">${account.minTradingDays}</span></li>
+                            <li>Leverage Max: <span class="ff-bold">${account.leverageMax}</span></li>
+                            <li>Re-Entry Allowed: <span class="ff-bold">${account.reEntryAllowed}</span></li>
+                        </ul>
+                    </div>
+                    <div class="prop-card-footer">
+                        <div class="prop-fee accent-text">CHALLENGE FEE: <span>$${account.challengeFee}</span></div>
+                        <div>Fee 100% Refunded Upon Passing Phases I and II</div>
+                        <div class="prop-card-cta">
+                            <button class="btn border-radius-10 accent-bg-1 white-text ff-bold" 
+                                    onclick="showConfirmModal('${account.id}', ${account.challengeFee}, ${account.tradingBalance}, '${account.title}')">
+                                Trade Now
+                            </button>
                         </div>
-                        <div class="prop-card-body">
-                            <ul class="prop-card-details">
-                                <li>Profit Target (Phase I): <span class="ff-bold">${account.profitTargetPhase1}%</span></li>
-                                <li>Profit Target (Phase II): <span class="ff-bold">${account.profitTargetPhase2}%</span></li>
-                                <li>Daily Loss Limit: <span class="ff-bold">${account.dailyLossLimit}%</span></li>
-                                <li>Max Trailing Drawdown: <span class="ff-bold">${account.maxTrailingDrawdown}%</span></li>
-                                <li>Minimum Trading Days: <span class="ff-bold">${account.minTradingDays}</span></li>
-                                <li>Leverage Max: <span class="ff-bold">${account.leverageMax}</span></li>
-                                <li>Re-Entry Allowed: <span class="ff-bold">${account.reEntryAllowed}</span></li>
-                            </ul>
-                        </div>
-                        <div class="prop-card-footer">
-                            <div class="prop-fee accent-text">CHALLENGE FEE: <span>$${account.challengeFee}</span></div>
-                            <div>Fee 100% Refunded Upon Passing Phases I and II</div>
-                            <div class="prop-card-cta">
-                                <button class="btn border-radius-10 accent-bg-1 white-text ff-bold" 
-                                        onclick="showConfirmModal('${account.id}', ${account.challengeFee}, ${account.tradingBalance}, '${account.title}')">
-                                    Trade Now
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    cardsContainer.appendChild(card);
-                });
-            } catch (error) {
-                cardsContainer.innerHTML = `<p style="color: red;">${error.message || 'Failed to load prop accounts'}</p>`;
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+
+            if (livePropAccounts.length === 0) {
+                cardsContainer.innerHTML = '<p>No live prop challenges available at this time.</p>';
             }
+        } catch (error) {
+            cardsContainer.innerHTML = `<p style="color: red;">${error.message || 'Failed to load prop accounts'}</p>`;
         }
+    }
 
         function showConfirmModal(propAccountId, depositAmount, tradingBalance, title) {
             const modal = document.getElementById('confirmModal');
